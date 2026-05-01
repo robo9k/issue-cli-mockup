@@ -1,5 +1,8 @@
 use std::collections::HashMap;
+use std::time::Duration;
 
+use anstyle_progress::TermProgress;
+use anstyle_progress::supports_term_progress;
 use clap::ArgAction;
 use clap::Parser;
 use color_eyre::Result;
@@ -13,6 +16,14 @@ use issue_cli_mockup::issue::Key;
 use issue_cli_mockup::issue::get_issue;
 use minijinja::Environment;
 use minijinja::context;
+use std::io::{self, IsTerminal};
+use tracing_human_layer::HumanLayer;
+use tracing_indicatif::IndicatifLayer;
+use tracing_indicatif::indicatif_eprintln;
+use tracing_indicatif::span_ext::IndicatifSpanExt;
+use tracing_indicatif::suspend_tracing_indicatif;
+use tracing_subscriber::layer::SubscriberExt;
+use tracing_subscriber::util::SubscriberInitExt;
 
 #[derive(Debug, Parser)]
 struct Args {
@@ -27,7 +38,15 @@ fn main() -> Result<()> {
     color_eyre::install()?;
 
     let args = Args::parse();
-    dbg!(&args);
+
+    let indicatif_layer = IndicatifLayer::new();
+
+    tracing_subscriber::registry()
+        .with(HumanLayer::new().with_output_writer(indicatif_layer.get_stderr_writer()))
+        .with(indicatif_layer)
+        .init();
+
+    tracing::debug!(?args, "Parsed command-line arguments.");
 
     let input_fields: Vec<Field> = args
         .fields
@@ -39,10 +58,10 @@ fn main() -> Result<()> {
             Field::new(name, value)
         })
         .collect();
-    dbg!(&input_fields);
+    tracing::debug!(?input_fields, "Parsed fields input.");
 
     let issue = get_issue(&args.issue_key)?;
-    dbg!(&issue);
+    tracing::info!(key = %args.issue_key, ?issue, "Got issue.");
 
     #[derive(Debug, thiserror::Error)]
     #[error("could not find field {field} in issue {issue}")]
@@ -69,20 +88,44 @@ fn main() -> Result<()> {
 
             Ok(())
         })?;
-    dbg!(&field_updates);
+    tracing::debug!(?field_updates, "Parsed issue field updates.");
 
-    let source = r###"Changed field{{ fields|pluralize}} {% for name, value in fields|items %}`{{ name }}`{% if not loop.last %}, {% endif %}{% endfor %}."###;
-    let mut env = Environment::new();
-    env.add_filter("pluralize", minijinja_contrib::filters::pluralize);
-    env.add_template("comment", source)?;
-    let tmpl = env.get_template("comment")?;
-    let comment = tmpl.render(context! {fields => field_updates})?;
+    if !field_updates.is_empty() {
+        let source = r###"Changed field{{ fields|pluralize}} {% for name, value in fields|items %}`{{ name }}`{% if not loop.last %}, {% endif %}{% endfor %}."###;
+        let mut env = Environment::new();
+        env.add_filter("pluralize", minijinja_contrib::filters::pluralize);
+        env.add_template("comment", source)?;
+        let tmpl = env.get_template("comment")?;
+        let comment = tmpl.render(context! {fields => field_updates})?;
 
-    //if let Some(comment) = Editor::new().extension(".txt").edit(&comment)? {}
-    let _comment: String = Input::with_theme(&ColorfulTheme::default())
-        .with_prompt("Comment for updated fields?")
-        .with_initial_text(comment)
-        .interact_text()?;
+        let comment: String = suspend_tracing_indicatif(|| {
+            //if let Some(comment) = Editor::new().extension(".txt").edit(&comment)? {}
+            Input::with_theme(&ColorfulTheme::default())
+                .with_prompt("Comment for updated fields?")
+                .with_initial_text(comment)
+                .interact_text()
+        })?;
+
+        tracing::debug!(comment, "Got comment for issue field updates.");
+
+        let _span = tracing::info_span!("edit_issue", key = %args.issue_key);
+        _span.pb_start();
+
+        let progress = TermProgress::start();
+        if supports_term_progress(io::stderr().is_terminal()) {
+            tracing::trace!("stderr supports term progress.");
+            indicatif_eprintln!("{progress}");
+        }
+
+        std::thread::sleep(Duration::from_secs(3));
+
+        let progress = TermProgress::remove();
+        if supports_term_progress(io::stderr().is_terminal()) {
+            indicatif_eprintln!("{progress}");
+        }
+
+        tracing::info!(key = %args.issue_key, "Edited issue.");
+    }
 
     Ok(())
 }
