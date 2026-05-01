@@ -3,12 +3,16 @@ use std::collections::HashMap;
 use clap::ArgAction;
 use clap::Parser;
 use color_eyre::Result;
+use dialoguer::Input;
+use dialoguer::theme::ColorfulTheme;
 use issue_cli_mockup::field::Field;
 use issue_cli_mockup::field::Name;
 use issue_cli_mockup::field::Value;
 use issue_cli_mockup::issue;
 use issue_cli_mockup::issue::Key;
 use issue_cli_mockup::issue::get_issue;
+use minijinja::Environment;
+use minijinja::context;
 
 #[derive(Debug, Parser)]
 struct Args {
@@ -66,6 +70,19 @@ fn main() -> Result<()> {
             Ok(())
         })?;
     dbg!(&field_updates);
+
+    let source = r###"Changed field{{ fields|pluralize}} {% for name, value in fields|items %}`{{ name }}`{% if not loop.last %}, {% endif %}{% endfor %}."###;
+    let mut env = Environment::new();
+    env.add_filter("pluralize", minijinja_contrib::filters::pluralize);
+    env.add_template("comment", source)?;
+    let tmpl = env.get_template("comment")?;
+    let comment = tmpl.render(context! {fields => field_updates})?;
+
+    //if let Some(comment) = Editor::new().extension(".txt").edit(&comment)? {}
+    let _comment: String = Input::with_theme(&ColorfulTheme::default())
+        .with_prompt("Comment for updated fields?")
+        .with_initial_text(comment)
+        .interact_text()?;
 
     Ok(())
 }

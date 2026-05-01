@@ -1,9 +1,9 @@
 pub mod field {
-    use serde::Deserialize;
+    use serde::{Deserialize, Serialize};
     use std::borrow::Cow;
     use std::fmt::Display;
 
-    #[derive(Debug, Deserialize, PartialEq, Eq, Hash, Clone)]
+    #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Hash, Clone)]
     pub struct Name(Cow<'static, str>);
 
     impl Name {
@@ -22,7 +22,7 @@ pub mod field {
         }
     }
 
-    #[derive(Debug, Deserialize, PartialEq, Eq)]
+    #[derive(Debug, Serialize, Deserialize, PartialEq, Eq)]
     pub struct Value(Cow<'static, str>);
 
     impl Value {
