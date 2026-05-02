@@ -28,6 +28,8 @@ flowchart TD
     prompt-normalize@{ shape: lean-r, label: "⇢ prompt normalize comment" }
     edit-normalize@{ shape: rect, label: "PUT issue ✨" }
     output-validation@{ shape: lean-l, label: "⇠ validation errors" }
+    fix@{ shape: diamond, label: "fix issue? 🛠️" }
+    prompt-fixes@{ shape: lean-r, label: "⇢ prompt field fixes" }
     transition-backward@{ shape: diamond, label: "return issue? ⏪" }
     prompt-forward@{ shape: lean-r, label: "⇢ prompt forward comment" }
     edit-forward@{ shape: rect, label: "PUT issue → ✔️" }
@@ -56,7 +58,10 @@ flowchart TD
     validate-fields --> valid
 
     valid -- ✓ valid fields --> normalized
-    valid -- x invalid fields --> output-validation --> transition-backward
+    valid -- x invalid fields --> output-validation --> fix
+
+    fix -- ✓ fix fields --> prompt-fixes --> diff
+    fix -- x don't fix fields --> transition-backward
 
     normalized -- ✓ normalized fields --> transition-forward
     normalized -- x abnormal fields --> output-normalized --> normalize
