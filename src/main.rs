@@ -99,6 +99,7 @@ fn main() -> Result<()> {
         let tmpl = env.get_template("comment")?;
         let comment = tmpl.render(context! {fields => field_updates})?;
 
+        indicatif_eprintln!("\u{0007}\u{1F514}"); // 🔔
         let comment: String = suspend_tracing_indicatif(|| {
             //if let Some(comment) = Editor::new().extension(".txt").edit(&comment)? {}
             Input::with_theme(&ColorfulTheme::default())
