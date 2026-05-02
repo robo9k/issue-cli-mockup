@@ -2,7 +2,7 @@
 
 ```terminal
 $ cargo run -- --field field3 value3-new --field field2 value2-new edit PRJ-42
-? Comment for updated fields? › Changed fields `field2`, `field3`.
+? Comment for updated fields? › Edited fields `field2`, `field3`, FYI @robo9k.
 ```
 
 ```mermaid

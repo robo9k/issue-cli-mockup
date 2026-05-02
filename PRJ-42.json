@@ -1,4 +1,5 @@
 {
+    "reporter": "robo9k",
     "fields": {
         "field1": "value1",
         "field2": "value2",

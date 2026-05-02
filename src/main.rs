@@ -132,12 +132,16 @@ fn main() -> Result<()> {
     tracing::debug!(?field_updates, "Parsed issue field updates.");
 
     if !field_updates.is_empty() {
-        let source = r###"Changed field{{ fields|pluralize}} {% for name, value in fields|items %}`{{ name }}`{% if not loop.last %}, {% endif %}{% endfor %}."###;
+        let source = r###"Edited field{{ updates|pluralize}} {% for name, value in updates|items %}`{{ name }}`{% if not loop.last %}, {% endif %}{% endfor %}, FYI @{{ issue.reporter }}."###;
         let mut env = Environment::new();
         env.add_filter("pluralize", minijinja_contrib::filters::pluralize);
         env.add_template("comment", source)?;
         let tmpl = env.get_template("comment")?;
-        let comment = tmpl.render(context! {fields => field_updates})?;
+        tracing::debug!(tmpl = tmpl.source(), "Got comment template");
+        tracing::trace!(vars = ?tmpl.undeclared_variables(true), "Got comment template undeclared variables");
+        let ctx = context! {issue => issue, updates => field_updates};
+        tracing::debug!(?ctx, "Prepared comment template context");
+        let comment = tmpl.render(ctx)?;
 
         indicatif_eprintln!("\u{0007}\u{1F514}"); // 🔔
         let comment: String = suspend_tracing_indicatif(|| {
@@ -169,6 +173,7 @@ fn main() -> Result<()> {
         tracing::info!(key = %issue_key, "Edited issue.");
     }
 
+    // TODO: ideally this would be emitted via tracing, but don't want unescaped ANSI from e.g. user input/fields
     if supports_hyperlinks::on(Stderr) {
         tracing::trace!("stderr supports term hyperlink.");
 

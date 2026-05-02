@@ -58,7 +58,7 @@ pub mod field {
 
 pub mod issue {
     use super::field;
-    use serde::Deserialize;
+    use serde::{Deserialize, Serialize};
     use std::borrow::Cow;
     use std::collections::HashMap;
     use std::convert::Infallible;
@@ -68,7 +68,7 @@ pub mod issue {
     use std::io::BufReader;
     use std::str::FromStr;
 
-    #[derive(Debug, Deserialize, PartialEq, Eq, Hash, Clone)]
+    #[derive(Debug, Serialize, Deserialize, PartialEq, Eq, Hash, Clone)]
     pub struct Key(Cow<'static, str>);
 
     impl Key {
@@ -99,8 +99,9 @@ pub mod issue {
         }
     }
 
-    #[derive(Debug, Deserialize)]
+    #[derive(Debug, Serialize, Deserialize)]
     pub struct Issue {
+        reporter: String,
         fields: HashMap<field::Name, field::Value>,
     }
 
