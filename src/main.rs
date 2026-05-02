@@ -17,6 +17,7 @@ use issue_cli_mockup::issue::get_issue;
 use minijinja::Environment;
 use minijinja::context;
 use std::io::{self, IsTerminal};
+use supports_hyperlinks::Stream::Stderr;
 use tracing_human_layer::HumanLayer;
 use tracing_indicatif::IndicatifLayer;
 use tracing_indicatif::indicatif_eprintln;
@@ -125,6 +126,19 @@ fn main() -> Result<()> {
         }
 
         tracing::info!(key = %args.issue_key, "Edited issue.");
+    }
+
+    if supports_hyperlinks::on(Stderr) {
+        tracing::trace!("stderr supports term hyperlink.");
+
+        let hyperlink = anstyle_hyperlink::Hyperlink::with_url(format!(
+            "https://issues.example.com/{}",
+            args.issue_key
+        ));
+        indicatif_eprintln!("Check {hyperlink}issue {}{hyperlink:#}", args.issue_key);
+    } else {
+        let hyperlink = format!("https://issues.example.com/{}", args.issue_key);
+        indicatif_eprintln!("Check issue {}: {}", args.issue_key, hyperlink);
     }
 
     Ok(())
