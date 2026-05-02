@@ -4,7 +4,7 @@ use std::time::Duration;
 use anstyle_progress::TermProgress;
 use anstyle_progress::supports_term_progress;
 use clap::ArgAction;
-use clap::Parser;
+use clap::{Parser, Subcommand};
 use color_eyre::Result;
 use dialoguer::Input;
 use dialoguer::theme::ColorfulTheme;
@@ -26,13 +26,47 @@ use tracing_indicatif::suspend_tracing_indicatif;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 
+/// Edit, return or handover issues
 #[derive(Debug, Parser)]
 struct Args {
-    #[arg(short='f', long="field", num_args = 2, action = ArgAction::Append, value_names = ["NAME", "VALUE"])]
+    #[command(subcommand)]
+    command: Command,
+
+    /// Fields 📋 to update
+    #[arg(short='f', long="field", num_args = 2, action = ArgAction::Append, value_names = ["NAME", "VALUE"], global = true)]
     fields: Vec<Vec<String>>,
 
-    #[arg(value_name = "KEY")]
-    issue_key: issue::Key,
+    /// Comment 💬 for updated fields / transition
+    #[arg(short = 'c', long = "comment", global = true)]
+    comment: Option<String>,
+}
+
+#[derive(Debug, Subcommand)]
+enum Command {
+    /// Edit issue ✏️
+    ///
+    /// Update fields + add comment
+    Edit {
+        /// Issue key 🪪; e.g. PRJ-42
+        #[arg(value_name = "KEY")]
+        issue_key: issue::Key,
+    },
+    /// Return issue ⏪
+    ///
+    /// Update fields + add comment + do transition status backwards
+    Return {
+        /// Issue key 🪪; e.g. PRJ-42
+        #[arg(value_name = "KEY")]
+        issue_key: issue::Key,
+    },
+    /// Handover issue ⏩
+    ///
+    /// Update fields + add comment + do transition status forward
+    Handover {
+        /// Issue key 🪪; e.g. PRJ-42
+        #[arg(value_name = "KEY")]
+        issue_key: issue::Key,
+    },
 }
 
 fn main() -> Result<()> {
@@ -61,8 +95,14 @@ fn main() -> Result<()> {
         .collect();
     tracing::debug!(?input_fields, "Parsed fields input.");
 
-    let issue = get_issue(&args.issue_key)?;
-    tracing::info!(key = %args.issue_key, ?issue, "Got issue.");
+    let issue_key = match args.command {
+        Command::Edit { issue_key, .. }
+        | Command::Return { issue_key, .. }
+        | Command::Handover { issue_key } => issue_key,
+    };
+
+    let issue = get_issue(&issue_key)?;
+    tracing::info!(key = %issue_key, ?issue, "Got issue.");
 
     #[derive(Debug, thiserror::Error)]
     #[error("could not find field {field} in issue {issue}")]
@@ -79,7 +119,7 @@ fn main() -> Result<()> {
                 issue
                     .field_value(field.name())
                     .ok_or_else(|| FieldNotFoundError {
-                        issue: args.issue_key.clone(),
+                        issue: issue_key.clone(),
                         field: field.name().clone(),
                     })?;
 
@@ -110,7 +150,7 @@ fn main() -> Result<()> {
 
         tracing::debug!(comment, "Got comment for issue field updates.");
 
-        let _span = tracing::info_span!("edit_issue", key = %args.issue_key);
+        let _span = tracing::info_span!("edit_issue", key = %issue_key);
         _span.pb_start();
 
         let progress = TermProgress::start();
@@ -126,7 +166,7 @@ fn main() -> Result<()> {
             indicatif_eprintln!("{progress}");
         }
 
-        tracing::info!(key = %args.issue_key, "Edited issue.");
+        tracing::info!(key = %issue_key, "Edited issue.");
     }
 
     if supports_hyperlinks::on(Stderr) {
@@ -134,12 +174,12 @@ fn main() -> Result<()> {
 
         let hyperlink = anstyle_hyperlink::Hyperlink::with_url(format!(
             "https://issues.example.com/{}",
-            args.issue_key
+            issue_key
         ));
-        indicatif_eprintln!("Check {hyperlink}issue {}{hyperlink:#}", args.issue_key);
+        indicatif_eprintln!("Check {hyperlink}issue {}{hyperlink:#}", issue_key);
     } else {
-        let hyperlink = format!("https://issues.example.com/{}", args.issue_key);
-        indicatif_eprintln!("Check issue {}: {}", args.issue_key, hyperlink);
+        let hyperlink = format!("https://issues.example.com/{}", issue_key);
+        indicatif_eprintln!("Check issue {}: {}", issue_key, hyperlink);
     }
 
     Ok(())
