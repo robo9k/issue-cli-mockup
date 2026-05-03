@@ -58,3 +58,21 @@ flowchart TD
 
     input-key --> get-issue --> validate --> output-validation --> field-template-context --> input-fields --> comment-template-context --> input-comment --> put-issue
 ```
+
+```toml
+[context]
+project = 'PRJ'
+type = 'servicedesk-robot-overlords-tickets'
+
+[instance]
+api-url = 'https://issues.example.com/api'
+issue-url = 'https://issues.example.com/issues/{issueKey}'
+servicedesk-url = 'https://support.example.com/{portalId}/{issueKey}'
+
+[return]
+transition-to = 'initial-ticket-status'
+
+[handover]
+transition-to = 'next-ticket-status'
+fields = ['optional-field1']
+```

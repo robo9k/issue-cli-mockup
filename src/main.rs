@@ -1,9 +1,11 @@
 use std::collections::HashMap;
+use std::path::PathBuf;
 use std::time::Duration;
 
 use anstyle_progress::TermProgress;
 use anstyle_progress::supports_term_progress;
 use clap::ArgAction;
+use clap::ValueHint;
 use clap::{Parser, Subcommand};
 use color_eyre::Result;
 use dialoguer::Input;
@@ -32,7 +34,11 @@ struct Args {
     #[command(subcommand)]
     command: Command,
 
-    /// Fields 📋 to update
+    /// Config ⚙️ file
+    #[arg(short = 'C', long = "config", env = "ISSUE_CONFIG", value_name = "FILE_PATH", value_hint = ValueHint::FilePath, global = true)]
+    config: Option<PathBuf>,
+
+    /// Field 📋 to update
     #[arg(short='f', long="field", num_args = 2, action = ArgAction::Append, value_names = ["NAME", "VALUE"], global = true)]
     fields: Vec<Vec<String>>,
 
