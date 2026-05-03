@@ -39,6 +39,8 @@ struct Args {
     config: Option<PathBuf>,
 
     /// Field 📋 to update
+    ///
+    /// Can occurr multiple times, i.e. `--field n1 v1 --field n2 v2`
     #[arg(short='f', long="field", num_args = 2, action = ArgAction::Append, value_names = ["NAME", "VALUE"], global = true)]
     fields: Vec<Vec<String>>,
 
@@ -52,6 +54,7 @@ enum Command {
     /// Edit issue ✏️
     ///
     /// Update fields + add comment
+    #[command(visible_alias = "e")]
     Edit {
         /// Issue key 🪪; e.g. PRJ-42
         #[arg(value_name = "KEY")]
@@ -60,6 +63,7 @@ enum Command {
     /// Return issue ⏪
     ///
     /// Update fields + add comment + do transition status backwards
+    #[command(visible_aliases = ["r", "b", "<"])]
     Return {
         /// Issue key 🪪; e.g. PRJ-42
         #[arg(value_name = "KEY")]
@@ -68,6 +72,7 @@ enum Command {
     /// Handover issue ⏩
     ///
     /// Update fields + add comment + do transition status forward
+    #[command(visible_aliases = ["h", "f", ">"])]
     Handover {
         /// Issue key 🪪; e.g. PRJ-42
         #[arg(value_name = "KEY")]

@@ -1,7 +1,7 @@
 # issue-cli-mockup
 
 ```terminal
-$ cargo run -- --field field3 value3-new --field field2 value2-new edit PRJ-42
+$ cargo run -- edit PRJ-42 --field field3 value3-new --field field2 value2-new
 ? Comment for updated fields? › Edited fields `field2`, `field3`, FYI @robo9k.
 ```
 
