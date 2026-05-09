@@ -1,7 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "title": "Config",
-  "description": "Configuration for `issue-cli-mockup`",
+  "title": "Configuration for `issue-cli-mockup`",
   "type": "object",
   "properties": {
     "instance": {
@@ -13,12 +12,16 @@
   ],
   "$defs": {
     "Instance": {
-      "description": "Config for the godzilla instance",
+      "title": "Config for the godzilla instance",
       "type": "object",
       "properties": {
         "base_uri": {
-          "description": "Base URI with a trailing `/` slash\n\nFor example: `https://issues.example.com/`",
-          "$ref": "#/$defs/Uri"
+          "title": "Base URI",
+          "description": "Base URI with a trailing `/` slash",
+          "$ref": "#/$defs/Uri",
+          "examples": [
+            "https://issues.example.com/"
+          ]
         }
       },
       "required": [

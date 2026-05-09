@@ -140,16 +140,16 @@ pub mod config {
     use schemars::JsonSchema;
     use serde::Deserialize;
 
-    /// Config for the godzilla instance
+    /// # Config for the godzilla instance
     #[derive(Debug, Deserialize, JsonSchema, PartialEq, Eq, Hash, Clone)]
     pub struct Instance {
+        /// # Base URI
         /// Base URI with a trailing `/` slash
-        ///
-        /// For example: `https://issues.example.com/`
+        #[schemars(example = "https://issues.example.com/")]
         pub base_uri: Uri,
     }
 
-    /// Configuration for `issue-cli-mockup`
+    /// # Configuration for `issue-cli-mockup`
     #[derive(Debug, Deserialize, JsonSchema, PartialEq, Eq, Hash, Clone)]
     pub struct Config {
         pub instance: Instance,
