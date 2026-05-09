@@ -149,6 +149,8 @@ pub mod config {
         pub base_uri: Uri,
     }
 
+    // TODO: https://tombi-toml.github.io/tombi/docs/json-schema#x-tombi-string-formats
+    // $schema / additionalProperties
     /// # Configuration for `issue-cli-mockup`
     #[derive(Debug, Deserialize, JsonSchema, PartialEq, Eq, Hash, Clone)]
     pub struct Config {
