@@ -1,0 +1,46 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Config",
+  "description": "Configuration for `issue-cli-mockup`",
+  "type": "object",
+  "properties": {
+    "instance": {
+      "$ref": "#/$defs/Instance"
+    }
+  },
+  "required": [
+    "instance"
+  ],
+  "$defs": {
+    "Instance": {
+      "description": "Config for the godzilla instance",
+      "type": "object",
+      "properties": {
+        "base_uri": {
+          "description": "Base URI with a trailing `/` slash\n\nFor example: `https://issues.example.com/`",
+          "$ref": "#/$defs/Uri"
+        }
+      },
+      "required": [
+        "base_uri"
+      ]
+    },
+    "Uri": {
+      "title": "HTTP base URI",
+      "description": "HTTP/S URI with scheme, authority and path but no query",
+      "type": "string",
+      "format": "uri",
+      "examples": [
+        "https://api.example.com/rest/v2/",
+        "http://example.com",
+        "http://localhost:8080/api/"
+      ],
+      "pattern": "^https?://[^?&#]+$",
+      "x-rust-type": {
+        "crate": "http_base_uri",
+        "path": "http_base_uri::Uri",
+        "version": "0.1.0"
+      }
+    }
+  }
+}

@@ -1,5 +1,7 @@
 # issue-cli-mockup
 
+TODO: Maybe this needs to be called request-agent? godzilla has request/issue and customer/sd agent/user
+
 ```terminal
 $ cargo run -- edit PRJ-42 --field field3 value3-new --field field2 value2-new
 ? Comment for updated fields? › Edited fields `field2`, `field3`, FYI @robo9k.
@@ -69,10 +71,18 @@ api-url = 'https://issues.example.com/api'
 issue-url = 'https://issues.example.com/issues/{issueKey}'
 servicedesk-url = 'https://support.example.com/{portalId}/{issueKey}'
 
+[edit]
+fields = ['field1', 'field2']
+comment = true
+
 [return]
 transition-to = 'initial-ticket-status'
 
 [handover]
-transition-to = 'next-ticket-status'
 fields = ['optional-field1']
+transition-to = 'next-ticket-status'
+```
+
+```terminal
+$ cargo run -- config > config.schema.json
 ```

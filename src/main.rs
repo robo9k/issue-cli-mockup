@@ -10,6 +10,7 @@ use clap::{Parser, Subcommand};
 use color_eyre::Result;
 use dialoguer::Input;
 use dialoguer::theme::ColorfulTheme;
+use issue_cli_mockup::config::Config;
 use issue_cli_mockup::field::Field;
 use issue_cli_mockup::field::Name;
 use issue_cli_mockup::field::Value;
@@ -28,7 +29,7 @@ use tracing_indicatif::suspend_tracing_indicatif;
 use tracing_subscriber::layer::SubscriberExt;
 use tracing_subscriber::util::SubscriberInitExt;
 
-/// Edit, return or handover issues
+/// Edit, return or handover issues/requests
 #[derive(Debug, Parser)]
 struct Args {
     #[command(subcommand)]
@@ -38,9 +39,9 @@ struct Args {
     #[arg(short = 'C', long = "config", env = "ISSUE_CONFIG", value_name = "FILE_PATH", value_hint = ValueHint::FilePath, global = true)]
     config: Option<PathBuf>,
 
-    /// Field 📋 to update
+    /// Field 📋 to edit
     ///
-    /// Can occurr multiple times, i.e. `--field n1 v1 --field n2 v2`
+    /// Can occurr multiple times, i.e. `--field name1 value1 --field name2 value2`
     #[arg(short='f', long="field", num_args = 2, action = ArgAction::Append, value_names = ["NAME", "VALUE"], global = true)]
     fields: Vec<Vec<String>>,
 
@@ -53,7 +54,7 @@ struct Args {
 enum Command {
     /// Edit issue ✏️
     ///
-    /// Update fields + add comment
+    /// Update fields (on behalf of customer request) + add comment
     #[command(visible_alias = "e")]
     Edit {
         /// Issue key 🪪; e.g. PRJ-42
@@ -62,7 +63,7 @@ enum Command {
     },
     /// Return issue ⏪
     ///
-    /// Update fields + add comment + do transition status backwards
+    /// Update fields + add comment + do transition status backward
     #[command(visible_aliases = ["r", "b", "<"])]
     Return {
         /// Issue key 🪪; e.g. PRJ-42
@@ -78,6 +79,9 @@ enum Command {
         #[arg(value_name = "KEY")]
         issue_key: issue::Key,
     },
+
+    #[command()]
+    Config {},
 }
 
 fn main() -> Result<()> {
@@ -93,6 +97,15 @@ fn main() -> Result<()> {
         .init();
 
     tracing::debug!(?args, "Parsed command-line arguments.");
+
+    if let Command::Config {} = args.command {
+        let config_schema = schemars::schema_for!(Config);
+        let schema_json = serde_json::to_string_pretty(&config_schema)?;
+
+        println!("{schema_json}");
+
+        return Ok(());
+    }
 
     let input_fields: Vec<Field> = args
         .fields
@@ -110,6 +123,7 @@ fn main() -> Result<()> {
         Command::Edit { issue_key, .. }
         | Command::Return { issue_key, .. }
         | Command::Handover { issue_key } => issue_key,
+        Command::Config {} => unreachable!(),
     };
 
     let issue = get_issue(&issue_key)?;

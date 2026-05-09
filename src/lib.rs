@@ -134,3 +134,24 @@ pub mod issue {
         })
     }
 }
+
+pub mod config {
+    use http_base_uri::Uri;
+    use schemars::JsonSchema;
+    use serde::Deserialize;
+
+    /// Config for the godzilla instance
+    #[derive(Debug, Deserialize, JsonSchema, PartialEq, Eq, Hash, Clone)]
+    pub struct Instance {
+        /// Base URI with a trailing `/` slash
+        ///
+        /// For example: `https://issues.example.com/`
+        pub base_uri: Uri,
+    }
+
+    /// Configuration for `issue-cli-mockup`
+    #[derive(Debug, Deserialize, JsonSchema, PartialEq, Eq, Hash, Clone)]
+    pub struct Config {
+        pub instance: Instance,
+    }
+}

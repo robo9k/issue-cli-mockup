@@ -9,8 +9,10 @@ anstyle-progress = "0.1"
 clap = { version = "4", features = ["derive", "unicode", "env", "unstable-v5"] }
 color-eyre = "0.6"
 dialoguer = "0.12"
+http-base-uri = { git = "https://github.com/robo9k/http-base-uri-rs.git", version = "0.1", features = ["schemars", "serde"] }
 minijinja = "2"
 minijinja-contrib = "2"
+schemars = "1"
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 supports-hyperlinks = "3"
